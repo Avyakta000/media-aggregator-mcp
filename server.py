@@ -90,26 +90,23 @@ def explain(item_id: str) -> Dict[str, Any]:
 
 @mcp.tool()
 def transcribe_youtube(
-    video_url: Optional[str] = None, 
-    video_id: Optional[str] = None,
-    languages: Optional[List[str]] = None,
+    video_url: str,
+    language: str = "en",
     include_metadata: bool = True
 ) -> Dict[str, Any]:
-    """Transcribe a YouTube video using the YouTube Transcript API. Provide either video_url or video_id.
+    """Transcribe a YouTube video using the YouTube Transcript API.
 
     Args:
-        video_url: YouTube video URL
-        video_id: YouTube video ID  
-        languages: List of language codes to try (default: ['en', 'en-US'])
+        video_url: YouTube video URL (required)
+        language: Language code to try (default: 'en')
         include_metadata: Whether to include timing and metadata
 
-    Returns JSON with fields: video_id, video_url, language, segments, text, word_count, etc.
+    Returns JSON with fields: video_id, language, segments, text, etc.
     """
     try:
         return fetch_youtube_transcript(
-            video_url=video_url, 
-            video_id=video_id,
-            languages=languages,
+            video_url=video_url,
+            language=language,
             include_metadata=include_metadata
         )
     except TranscriptError as exc:
