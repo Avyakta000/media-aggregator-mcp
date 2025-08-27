@@ -1,0 +1,13 @@
+mcp[cli]
+fastmcp
+google-api-python-client
+praw
+newsapi-python
+pydantic
+pydantic-settings
+python-dotenv
+requests
+tenacity
+typing-extensions
+youtube-transcript-api
+
