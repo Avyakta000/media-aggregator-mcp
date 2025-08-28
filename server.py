@@ -1,4 +1,5 @@
 import logging
+import contextlib
 from typing import Any, Dict, List, Optional, Literal
 
 from fastmcp import FastMCP
@@ -8,7 +9,8 @@ from core.config import settings
 from core.recommend import explain_ranking, generate_recommendations, list_supported_sources
 from adapters.transcript import TranscriptError, fetch_youtube_transcript
 from fastmcp.server.auth.providers.workos import AuthKitProvider
-
+from starlette.applications import Starlette
+from starlette.routing import Mount
 
 logging.basicConfig(
     level=logging.INFO,
@@ -31,13 +33,7 @@ def get_trends_by_source(
     region: Optional[str] = None,
     limit: int = 20,
 ) -> List[Dict[str, Any]]:
-    """Fetch trends from a specific source for debugging or deep-dives.
-
-    - source: Choose from: "youtube", "reddit", "newsapi"
-    - topic: Optional topic/keyword to focus the feed.
-    - region: Optional region or country code (e.g., "US").
-    - limit: Maximum number of items to return.
-    """
+    """Fetch trends from a specific source."""
     items = fetch_trends_by_source(source=source, topic=topic, region=region, limit=limit)
     return [item.model_dump(mode="json") for item in items]
 
@@ -50,15 +46,7 @@ def recommend(
     limit: int = 10,
     source: Optional[Literal["youtube", "reddit", "newsapi"]] = None,
 ) -> List[Dict[str, Any]]:
-    """Return recommendations based on current trends and lightweight personalization.
-
-    - topic: Required topic/keyword to anchor recommendations.
-    - user_prefs: Optional dictionary with keys such as `preferred_sources: list[str]` and
-      `keywords: list[str]` to bias ranking.
-    - region: Optional region or country code (e.g., "US").
-    - limit: Maximum number of items to return.
-    - source: Optional source to bias toward (choose from: "youtube", "reddit", "newsapi").
-    """
+    """Return recommendations based on current trends."""
     prefs = user_prefs or {}
     if source:
         # Bias recommendations toward the provided source
@@ -81,10 +69,7 @@ def recommend(
 
 @mcp.tool()
 def explain(item_id: str) -> Dict[str, Any]:
-    """Explain why an item is ranked the way it is.
-
-    - item_id: The unique item id returned in feeds/recommendations.
-    """
+    """Explain why an item is ranked the way it is."""
     return explain_ranking(item_id)
 
 
@@ -92,36 +77,36 @@ def explain(item_id: str) -> Dict[str, Any]:
 def transcribe_youtube(
     video_url: str,
     language: str = "en",
-    include_metadata: bool = True
+    transcript_type: str = "auto",
+    include_metadata: bool = True,
 ) -> Dict[str, Any]:
     """Transcribe a YouTube video using the YouTube Transcript API.
-
-    Args:
-        video_url: YouTube video URL (required)
-        language: Language code to try (default: 'en')
-        include_metadata: Whether to include timing and metadata
-
-    Returns JSON with fields: video_id, language, segments, text, etc.
+    (Optional) The transcript type can be one of the following:
+        - "manual" - use the manually created transcript
+        - "generated" - use the generated transcript
+        - "auto" - it will attempt to use the manually created transcript first, then fallback to generated
     """
+    if transcript_type not in ["manual", "generated", "auto"]:
+        raise ValueError(f"Invalid transcript type: {transcript_type}. Must be one of: manual, generated, auto")
     try:
         return fetch_youtube_transcript(
             video_url=video_url,
             language=language,
+            transcript_type=transcript_type,
             include_metadata=include_metadata
         )
     except TranscriptError as exc:
         return {"error": str(exc)}
 
 
+# ---------------- Resources ----------------
 @mcp.resource("media-aggregator://sources")
 def sources_resource() -> Dict[str, Any]:
-    """A discovery resource listing supported sources and configuration hints."""
     return {"sources": list_supported_sources(), "default_region": settings.default_region}
 
 
 @mcp.resource("media-aggregator://status", mime_type="application/json")
 def status_resource() -> Dict[str, Any]:
-    """Simple health/status resource."""
     return {"name": settings.mcp_server_name, "status": "ok"}
 
 
@@ -163,25 +148,23 @@ def resource_recommend(topic: str, region: Optional[str] = None, limit: int = 10
 
 @mcp.prompt
 def summarize_trends(topic: str, region: Optional[str] = None) -> str:
-    """Prompt to summarize trends for a topic."""
     r = region or settings.default_region
-    return (
-        f"Summarize key takeaways for current '{topic}' trends in {r}. "
-        "Group by source if helpful, and avoid duplication."
-    )
+    return f"Summarize key takeaways for current '{topic}' trends in {r}."
 
 
 @mcp.prompt
 def explain_recommendation(item_id: str) -> str:
-    """Prompt to explain why a specific item was recommended."""
     return (
-        "Explain why the item with id '" + item_id + "' ranks highly, "
-        "considering source popularity, topic match, engagement, and recency."
+     f"Explain why the item with id '" + item_id + "' ranks highly, "
+     "considering source popularity, topic match, engagement, and recency."
     )
 
 
-if __name__ == "__main__":
-    logger.info("Starting MediaAggregatorMCP HTTP server on http://127.0.0.1:8080/mcp/")
-    mcp.run(transport="http", host="127.0.0.1", port=8080, path="/mcp/")
+mcp_app = mcp.http_app(path='/mcp')
 
-
+app = Starlette(
+    routes=[
+        Mount("/", app=mcp_app),
+    ],
+    lifespan=mcp_app.lifespan,
+)
