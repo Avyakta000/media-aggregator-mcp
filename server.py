@@ -50,11 +50,11 @@ mcp_auth = MCPAuth(
             metadata=ResourceServerMetadata(
                 resource=resource_id,
                 authorization_servers=[auth_server_config],
-                scopes_supported=[
-                    "read:trends",
-                    "read:recommendations",
-                    "read:transcripts",
-                ],
+                # scopes_supported=[
+                #     "read:trends",
+                #     "read:recommendations",
+                #     "read:transcripts",
+                # ],
             )
         )
     ]
