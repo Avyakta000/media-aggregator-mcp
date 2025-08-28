@@ -112,13 +112,22 @@ def explain(item_id: str) -> Dict[str, Any]:
 def transcribe_youtube(
     video_url: str,
     language: str = "en",
-    include_metadata: bool = True
+    transcript_type: str = "auto",
+    include_metadata: bool = True,
 ) -> Dict[str, Any]:
-    """Transcribe a YouTube video using the YouTube Transcript API."""
+    """Transcribe a YouTube video using the YouTube Transcript API.
+    (Optional) The transcript type can be one of the following:
+        - "manual" - use the manually created transcript
+        - "generated" - use the generated transcript
+        - "auto" - it will attempt to use the manually created transcript first, then fallback to generated
+    """
+    if transcript_type not in ["manual", "generated", "auto"]:
+        raise ValueError(f"Invalid transcript type: {transcript_type}. Must be one of: manual, generated, auto")
     try:
         return fetch_youtube_transcript(
             video_url=video_url,
             language=language,
+            transcript_type=transcript_type,
             include_metadata=include_metadata
         )
     except TranscriptError as exc:
@@ -164,7 +173,7 @@ app = Starlette(
 
 
 # ---------------- Entrypoint ----------------
-if __name__ == "__main__":
-    import uvicorn
-    logger.info(f"Starting MediaAggregatorMCP with Auth on http://127.0.0.1:8080")
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+# if __name__ == "__main__":
+    # import uvicorn
+    # logger.info(f"Starting MediaAggregatorMCP with Auth on http://127.0.0.1:8080")
+    # uvicorn.run(app, host="0.0.0.0", port=8080)
