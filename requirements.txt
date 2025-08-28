@@ -10,4 +10,4 @@ requests
 tenacity
 typing-extensions
 youtube-transcript-api
-
+mcpauth==0.2.0b1
