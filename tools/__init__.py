@@ -4,9 +4,8 @@ This package contains all financial data tools for the FinanceMCP server.
 """
 
 from .stock_tools import *
-from .forex_tools import *
-from .crypto_tools import *
 from .macro_tools import *
+from .types import *
 
 __all__ = [
     # Stock tools
@@ -15,20 +14,34 @@ __all__ = [
     "get_stock_history",
     "get_stock_fundamentals",
     "search_stocks",
-    
-    # Forex tools
-    "get_forex_rate",
-    "get_forex_history",
-    "get_currency_list",
-    
-    # Crypto tools
-    "get_crypto_price",
-    "get_crypto_history",
-    "get_crypto_list",
+    "analyze_stock",
     
     # Macro tools
     "get_economic_indicator",
     "get_fed_rates",
     "get_inflation_data",
     "get_gdp_data",
+    "get_unemployment_data",
+    "get_popular_indicators",
+    
+    # Types
+    "StockPriceData",
+    "StockQuoteData", 
+    "StockHistoryData",
+    "StockFundamentalsData",
+    "StockSearchResult",
+    "StockAnalysisData",
+    "EconomicIndicatorData",
+    "FedRatesData",
+    "InflationData",
+    "GDPData",
+    "UnemploymentData",
+    "PopularIndicatorsData",
+    "ErrorResponse",
+    "StockPeriod",
+    "StockInterval",
+    "DataSource",
+    "Exchange",
+    "Currency",
+    "ApiResponse"
 ]

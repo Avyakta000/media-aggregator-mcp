@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     fred_api_key: Optional[str] = None
     
     # Default settings
-    default_currency: str = "USD"
-    default_market: str = "US"
+    default_currency: str = "INR"
+    default_market: str = "IN"
     default_timeframe: str = "1d"
     
     # Rate limiting settings

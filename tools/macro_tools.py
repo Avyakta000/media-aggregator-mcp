@@ -7,12 +7,16 @@ economic indicators, Federal Reserve rates, inflation data, and GDP data.
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Optional
 import pandas as pd
 from fredapi import Fred
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from settings import settings
+from .types import (
+    EconomicIndicatorData, FedRatesData, InflationData, GDPData,
+    UnemploymentData, PopularIndicatorsData, ApiResponse
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +58,7 @@ async def get_economic_indicator(
     series_id: str,
     observation_start: Optional[str] = None,
     observation_end: Optional[str] = None
-) -> Dict[str, Any]:
+) -> ApiResponse:
     """
     Get economic indicator data from FRED.
     
@@ -116,7 +120,7 @@ async def get_economic_indicator(
         return {"error": str(e), "series_id": series_id}
 
 
-async def get_fed_rates() -> Dict[str, Any]:
+async def get_fed_rates() -> ApiResponse:
     """
     Get Federal Reserve interest rates.
     
@@ -184,7 +188,7 @@ async def get_fed_rates() -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-async def get_inflation_data() -> Dict[str, Any]:
+async def get_inflation_data() -> ApiResponse:
     """
     Get inflation data including CPI and PCE.
     
@@ -269,7 +273,7 @@ async def get_inflation_data() -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-async def get_gdp_data() -> Dict[str, Any]:
+async def get_gdp_data() -> ApiResponse:
     """
     Get GDP data including real and nominal GDP.
     
@@ -343,7 +347,7 @@ async def get_gdp_data() -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-async def get_unemployment_data() -> Dict[str, Any]:
+async def get_unemployment_data() -> ApiResponse:
     """
     Get unemployment data including unemployment rate and labor force participation.
     
@@ -411,7 +415,7 @@ async def get_unemployment_data() -> Dict[str, Any]:
         return {"error": str(e)}
 
 
-async def get_popular_indicators() -> Dict[str, Any]:
+async def get_popular_indicators() -> ApiResponse:
     """
     Get list of popular economic indicators with their FRED series IDs.
     

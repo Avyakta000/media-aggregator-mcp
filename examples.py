@@ -16,114 +16,44 @@ async def example_stock_analysis():
     """Example: Comprehensive stock market analysis"""
     print("=== STOCK MARKET ANALYSIS EXAMPLE ===")
     
-    # Get Apple stock quote
-    apple_quote = {
-        "symbol": "AAPL",
-        "company_name": "Apple Inc.",
-        "current_price": 150.25,
-        "previous_close": 148.10,
-        "change": 2.15,
-        "change_percent": 1.45,
-        "volume": 1234567,
-        "market_cap": 2500000000000,
-        "pe_ratio": 25.5,
-        "dividend_yield": 0.65,
-        "sector": "Technology",
-        "industry": "Consumer Electronics"
+    # Get Reliance stock quote (demonstrating automatic suffix handling)
+    reliance_quote = {
+        "symbol": "RELIANCE.NS",  # Could also pass "RELIANCE" and it would auto-add .NS
+        "company_name": "Reliance Industries Limited",
+        "current_price": 2450.75,
+        "previous_close": 2420.10,
+        "change": 30.65,
+        "change_percent": 1.27,
+        "volume": 2345678,
+        "market_cap": 16500000000000,
+        "pe_ratio": 18.5,
+        "dividend_yield": 0.45,
+        "sector": "Oil & Gas",
+        "industry": "Refineries"
     }
     
-    print(f"📈 {apple_quote['company_name']} ({apple_quote['symbol']})")
-    print(f"   Current Price: ${apple_quote['current_price']}")
-    print(f"   Change: ${apple_quote['change']} ({apple_quote['change_percent']}%)")
-    print(f"   Market Cap: ${apple_quote['market_cap']:,}")
-    print(f"   P/E Ratio: {apple_quote['pe_ratio']}")
-    print(f"   Dividend Yield: {apple_quote['dividend_yield']}%")
+    print(f"📈 {reliance_quote['company_name']} ({reliance_quote['symbol']})")
+    print(f"   Current Price: ₹{reliance_quote['current_price']}")
+    print(f"   Change: ₹{reliance_quote['change']} ({reliance_quote['change_percent']}%)")
+    print(f"   Market Cap: ₹{reliance_quote['market_cap']:,}")
+    print(f"   P/E Ratio: {reliance_quote['pe_ratio']}")
+    print(f"   Dividend Yield: {reliance_quote['dividend_yield']}%")
     
     # Get historical data
     historical_data = {
-        "symbol": "AAPL",
+        "symbol": "RELIANCE.NS",
         "period": "1mo",
         "interval": "1d",
         "data": [
-            {"date": "2024-01-15", "close": 150.25, "volume": 1234567},
-            {"date": "2024-01-14", "close": 148.10, "volume": 1154321},
-            {"date": "2024-01-13", "close": 147.85, "volume": 1123456}
+            {"date": "2024-01-15", "close": 2450.75, "volume": 2345678},
+            {"date": "2024-01-14", "close": 2420.10, "volume": 2154321},
+            {"date": "2024-01-13", "close": 2415.85, "volume": 2123456}
         ]
     }
     
     print(f"\n📊 Historical Data (1 month):")
     for point in historical_data['data'][:3]:
-        print(f"   {point['date']}: ${point['close']} (Volume: {point['volume']:,})")
-
-
-async def example_forex_analysis():
-    """Example: Foreign exchange analysis"""
-    print("\n=== FOREX ANALYSIS EXAMPLE ===")
-    
-    # Get USD/EUR exchange rate
-    usd_eur_rate = {
-        "from_currency": "USD",
-        "to_currency": "EUR",
-        "rate": 0.85,
-        "inverse_rate": 1.18,
-        "change": 0.002,
-        "change_percent": 0.24,
-        "high": 0.852,
-        "low": 0.843,
-        "timestamp": "2024-01-15T16:00:00Z"
-    }
-    
-    print(f"💱 {usd_eur_rate['from_currency']}/{usd_eur_rate['to_currency']} Exchange Rate")
-    print(f"   Current Rate: {usd_eur_rate['rate']}")
-    print(f"   Change: {usd_eur_rate['change']} ({usd_eur_rate['change_percent']}%)")
-    print(f"   Day Range: {usd_eur_rate['low']} - {usd_eur_rate['high']}")
-    
-    # Currency conversion example
-    conversion = {
-        "amount": 1000,
-        "from_currency": "USD",
-        "to_currency": "EUR",
-        "rate": 0.85,
-        "converted_amount": 850.0
-    }
-    
-    print(f"\n💰 Currency Conversion:")
-    print(f"   {conversion['amount']} {conversion['from_currency']} = {conversion['converted_amount']} {conversion['to_currency']}")
-
-
-async def example_crypto_analysis():
-    """Example: Cryptocurrency market analysis"""
-    print("\n=== CRYPTOCURRENCY ANALYSIS EXAMPLE ===")
-    
-    # Get Bitcoin market data
-    btc_data = {
-        "symbol": "BTC",
-        "market": "USD",
-        "market_data": {
-            "current_price": 45000.50,
-            "market_cap": 850000000000,
-            "market_cap_rank": 1,
-            "volume_24h": 25000000000,
-            "circulating_supply": 19500000,
-            "max_supply": 21000000,
-            "total_supply": 19500000
-        },
-        "price_change": {
-            "change_24h": 1250.25,
-            "change_percent_24h": 2.86,
-            "change_7d": 3500.00,
-            "change_percent_7d": 8.43
-        }
-    }
-    
-    print(f"₿ Bitcoin ({btc_data['symbol']}) Market Data")
-    print(f"   Current Price: ${btc_data['market_data']['current_price']:,}")
-    print(f"   Market Cap: ${btc_data['market_data']['market_cap']:,}")
-    print(f"   Market Cap Rank: #{btc_data['market_data']['market_cap_rank']}")
-    print(f"   24h Volume: ${btc_data['market_data']['volume_24h']:,}")
-    print(f"   24h Change: ${btc_data['price_change']['change_24h']} ({btc_data['price_change']['change_percent_24h']}%)")
-    print(f"   7d Change: ${btc_data['price_change']['change_7d']} ({btc_data['price_change']['change_percent_7d']}%)")
-    print(f"   Circulating Supply: {btc_data['market_data']['circulating_supply']:,} BTC")
+        print(f"   {point['date']}: ₹{point['close']} (Volume: {point['volume']:,})")
 
 
 async def example_macroeconomic_analysis():
@@ -201,19 +131,9 @@ async def example_comprehensive_market_analysis():
     market_summary = {
         "timestamp": "2024-01-15T16:00:00Z",
         "equity_markets": {
-            "sp500": {"symbol": "^GSPC", "price": 4800.50, "change": 25.30, "change_percent": 0.53},
-            "nasdaq": {"symbol": "^IXIC", "price": 15200.75, "change": 45.20, "change_percent": 0.30},
-            "dow": {"symbol": "^DJI", "price": 37500.25, "change": 150.75, "change_percent": 0.40}
-        },
-        "forex_markets": {
-            "usd_eur": {"rate": 0.85, "change": 0.002, "change_percent": 0.24},
-            "usd_gbp": {"rate": 0.78, "change": -0.001, "change_percent": -0.13},
-            "usd_jpy": {"rate": 148.50, "change": 0.75, "change_percent": 0.51}
-        },
-        "crypto_markets": {
-            "btc": {"price": 45000.50, "change": 1250.25, "change_percent": 2.86},
-            "eth": {"price": 2800.75, "change": 85.50, "change_percent": 3.15},
-            "market_cap_total": 1850000000000
+            "nifty50": {"symbol": "^NSEI", "price": 22500.50, "change": 125.30, "change_percent": 0.56},
+            "sensex": {"symbol": "^BSESN", "price": 74200.75, "change": 245.20, "change_percent": 0.33},
+            "banknifty": {"symbol": "^NSEBANK", "price": 48500.25, "change": 150.75, "change_percent": 0.31}
         },
         "macro_indicators": {
             "fed_funds_rate": 5.25,
@@ -223,21 +143,11 @@ async def example_comprehensive_market_analysis():
         }
     }
     
-    print(f"🌍 Global Market Summary - {market_summary['timestamp']}")
+    print(f"🌍 Indian Market Summary - {market_summary['timestamp']}")
     
     print(f"\n📈 Equity Markets:")
     for index, data in market_summary['equity_markets'].items():
-        print(f"   {index.upper()}: ${data['price']:,} ({data['change']:+} / {data['change_percent']:+.2f}%)")
-    
-    print(f"\n💱 Forex Markets:")
-    for pair, data in market_summary['forex_markets'].items():
-        print(f"   {pair.upper()}: {data['rate']} ({data['change']:+} / {data['change_percent']:+.2f}%)")
-    
-    print(f"\n₿ Cryptocurrency Markets:")
-    for crypto, data in market_summary['crypto_markets'].items():
-        if crypto != 'market_cap_total':
-            print(f"   {crypto.upper()}: ${data['price']:,} ({data['change']:+} / {data['change_percent']:+.2f}%)")
-    print(f"   Total Market Cap: ${market_summary['crypto_markets']['market_cap_total']:,}")
+        print(f"   {index.upper()}: ₹{data['price']:,} ({data['change']:+} / {data['change_percent']:+.2f}%)")
     
     print(f"\n🏦 Macroeconomic Indicators:")
     print(f"   Federal Funds Rate: {market_summary['macro_indicators']['fed_funds_rate']}%")
@@ -255,29 +165,23 @@ async def example_ai_agent_workflow():
         {
             "step": 1,
             "action": "get_stock_price_tool",
-            "params": {"symbol": "AAPL"},
-            "purpose": "Get current Apple stock price for portfolio tracking"
+            "params": {"symbol": "RELIANCE.NS"},
+            "purpose": "Get current Reliance stock price for portfolio tracking"
         },
         {
             "step": 2,
-            "action": "get_forex_rate_tool",
-            "params": {"from_currency": "USD", "to_currency": "EUR"},
-            "purpose": "Check USD/EUR rate for international investment analysis"
+            "action": "get_stock_quote_tool",
+            "params": {"symbol": "TCS.NS"},
+            "purpose": "Get comprehensive TCS stock quote for analysis"
         },
         {
             "step": 3,
-            "action": "get_crypto_price_tool",
-            "params": {"symbol": "BTC", "market": "USD"},
-            "purpose": "Monitor Bitcoin price for crypto portfolio"
-        },
-        {
-            "step": 4,
             "action": "get_fed_rates_tool",
             "params": {},
             "purpose": "Check Federal Reserve rates for economic analysis"
         },
         {
-            "step": 5,
+            "step": 4,
             "action": "get_inflation_data_tool",
             "params": {},
             "purpose": "Analyze inflation trends for investment decisions"
@@ -291,16 +195,15 @@ async def example_ai_agent_workflow():
         print(f"   Purpose: {step['purpose']}")
     
     print(f"\n📊 Analysis Results:")
-    print("   • Apple stock is trading at $150.25 (+1.45%)")
-    print("   • USD/EUR exchange rate is 0.85 (+0.24%)")
-    print("   • Bitcoin is at $45,000 (+2.86%)")
+    print("   • Reliance stock is trading at ₹2450.75 (+1.27%)")
+    print("   • TCS stock is trading at ₹3850.25 (+0.85%)")
     print("   • Federal Funds Rate is 5.25%")
     print("   • CPI inflation is 3.1% YoY")
     
     print(f"\n💡 AI Agent Recommendations:")
     print("   • Market sentiment is positive with gains across major indices")
     print("   • Inflation remains elevated but stable")
-    print("   • Consider diversifying into international markets given USD strength")
+    print("   • Consider diversifying into defensive sectors given economic uncertainty")
     print("   • Monitor Fed policy for potential rate changes")
 
 
@@ -310,8 +213,6 @@ async def main():
     print("=" * 50)
     
     await example_stock_analysis()
-    await example_forex_analysis()
-    await example_crypto_analysis()
     await example_macroeconomic_analysis()
     await example_comprehensive_market_analysis()
     await example_ai_agent_workflow()

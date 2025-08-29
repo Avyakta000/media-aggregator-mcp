@@ -1,12 +1,12 @@
 """FinanceMCP Server
 
 A production-ready MCP server for financial data using FastMCP.
-Provides comprehensive financial data tools including stocks, forex, crypto, and macroeconomic indicators.
+Provides comprehensive financial data tools including Indian stocks and macroeconomic indicators.
 """
 
 import logging
 import contextlib
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 from fastmcp import FastMCP
@@ -20,21 +20,10 @@ from tools.stock_tools import (
     get_stock_quote,
     get_stock_history,
     get_stock_fundamentals,
-    search_stocks
+    search_stocks,
+    analyze_stock
 )
-from tools.forex_tools import (
-    get_forex_rate,
-    get_forex_history,
-    get_currency_list,
-    get_currency_converter
-)
-from tools.crypto_tools import (
-    get_crypto_price,
-    get_crypto_history,
-    get_crypto_list,
-    get_crypto_market_data,
-    search_cryptocurrencies
-)
+
 from tools.macro_tools import (
     get_economic_indicator,
     get_fed_rates,
@@ -43,6 +32,8 @@ from tools.macro_tools import (
     get_unemployment_data,
     get_popular_indicators
 )
+
+from tools.types import DataSource, ApiResponse
 
 from settings import settings
 
@@ -63,40 +54,44 @@ logger = logging.getLogger("FinanceMCP")
 mcp = FastMCP(settings.mcp_server_name)
 
 # ==================== STOCK MARKET TOOLS ====================
+# Note: analyze_stock_tool provides comprehensive research-style analysis
+# while other tools provide specific data points for different use cases
 
 @mcp.tool()
 async def get_stock_price_tool(
     symbol: str,
-    source: Literal["yahoo", "alpha_vantage"] = "yahoo"
-) -> Dict[str, Any]:
+    source: DataSource = "yahoo"
+) -> ApiResponse:
     """
-    Fetch real-time stock data using Yahoo Finance.
-
+    Fetch real-time stock data for Indian markets using Yahoo Finance.
+    
     Usage:
-    - For US stocks: use ticker symbols directly (e.g., "AAPL", "MSFT").
-    - For Indian stocks: always include the exchange suffix:    
+    - For Indian stocks: you can pass just the stock name or include the exchange suffix:
+        - Just stock name: "RELIANCE", "TCS", "HDFCBANK" (will automatically try NSE first, then BSE)
         - NSE India → ".NS" (e.g., "RELIANCE.NS", "TCS.NS", "HDFCBANK.NS")
         - BSE India → ".BO" (e.g., "RELIANCE.BO", "TCS.BO")
-
+    
     Examples:
-        get_stock_price("AAPL")        # Apple Inc (NASDAQ)
-        get_stock_price("RELIANCE.NS") # Reliance Industries (NSE India)
-        get_stock_price("PNB.BO")      # Punjab National Bank (BSE India)
-
+        get_stock_price("RELIANCE")     # Will try RELIANCE.NS first, then RELIANCE.BO
+        get_stock_price("RELIANCE.NS")  # Uses NSE explicitly
+        get_stock_price("TCS.NS")       # Tata Consultancy Services (NSE India)
+        get_stock_price("HDFCBANK.NS")  # HDFC Bank (NSE India)
+        get_stock_price("PNB.BO")       # Punjab National Bank (BSE India)
+    
     Note:
-    If no exchange suffix is provided, the tool may not return the correct stock.
+    This tool is configured for Indian markets only. If no exchange suffix is provided, it will automatically try NSE (.NS) first, then BSE (.BO).
     """
-
     return await get_stock_price(symbol, source)
 
 
 @mcp.tool()
-async def get_stock_quote_tool(symbol: str) -> Dict[str, Any]:
+async def get_stock_quote_tool(symbol: str) -> ApiResponse:
     """
-    Get comprehensive stock quote information.
+    Get comprehensive stock quote information for Indian stocks.
     
     Args:
-        symbol: Stock symbol (e.g., "AAPL", "MSFT", "GOOGL")
+        symbol: Stock symbol (e.g., "RELIANCE", "RELIANCE.NS", "PNB.BO")
+               If no exchange suffix is provided, will automatically try NSE (.NS) first, then BSE (.BO)
     
     Returns:
         Dictionary containing detailed quote information
@@ -107,14 +102,15 @@ async def get_stock_quote_tool(symbol: str) -> Dict[str, Any]:
 @mcp.tool()
 async def get_stock_history_tool(
     symbol: str,
-    period: Literal["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"] = "1mo",
-    interval: Literal["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"] = "1d"
-) -> Dict[str, Any]:
+    period: str = "1mo",
+    interval: str = "1d"
+) -> ApiResponse:
     """
-    Get historical stock data.
+    Get historical stock data for Indian stocks.
     
     Args:
-        symbol: Stock symbol (e.g., "AAPL", "MSFT", "GOOGL")
+        symbol: Stock symbol (e.g., "RELIANCE", "RELIANCE.NS", "PNB.BO")
+               If no exchange suffix is provided, will automatically try NSE (.NS) first, then BSE (.BO)
         period: Time period for historical data
         interval: Data interval
     
@@ -125,12 +121,13 @@ async def get_stock_history_tool(
 
 
 @mcp.tool()
-async def get_stock_fundamentals_tool(symbol: str) -> Dict[str, Any]:
+async def get_stock_fundamentals_tool(symbol: str) -> ApiResponse:
     """
-    Get fundamental financial data for a stock.
+    Get fundamental financial data for Indian stocks.
     
     Args:
-        symbol: Stock symbol (e.g., "AAPL", "MSFT", "GOOGL")
+        symbol: Stock symbol (e.g., "RELIANCE", "RELIANCE.NS", "PNB.BO")
+               If no exchange suffix is provided, will automatically try NSE (.NS) first, then BSE (.BO)
     
     Returns:
         Dictionary containing fundamental data
@@ -139,178 +136,48 @@ async def get_stock_fundamentals_tool(symbol: str) -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def search_stocks_tool(query: str, limit: int = 10) -> Dict[str, Any]:
+async def search_stocks_tool(query: str, limit: int = 10) -> ApiResponse:
     """
-    Search for stocks by company name or symbol.
+    Search for Indian stocks by company name or symbol.
     
     Args:
         query: Search query (company name or symbol)
         limit: Maximum number of results
     
     Returns:
-        Dictionary containing search results
+        Dictionary containing search results (prioritizes Indian stocks)
     """
     return await search_stocks(query, limit)
 
-# ==================== FOREX TOOLS ====================
 
 @mcp.tool()
-async def get_forex_rate_tool(
-    from_currency: str,
-    to_currency: str,
-    source: Literal["yahoo", "alpha_vantage"] = "yahoo"
-) -> Dict[str, Any]:
-    """
-    Get current exchange rate between two currencies.
-    
-    Args:
-        from_currency: Base currency code (e.g., "USD", "EUR", "GBP")
-        to_currency: Quote currency code (e.g., "EUR", "USD", "JPY")
-        source: Data source ("yahoo" or "alpha_vantage")
-    
-    Returns:
-        Dictionary containing current exchange rate and information
-    """
-    return await get_forex_rate(from_currency, to_currency, source)
-
-
-@mcp.tool()
-async def get_forex_history_tool(
-    from_currency: str,
-    to_currency: str,
-    period: Literal["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"] = "1mo",
-    interval: Literal["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"] = "1d"
-) -> Dict[str, Any]:
-    """
-    Get historical forex data.
-    
-    Args:
-        from_currency: Base currency code (e.g., "USD", "EUR", "GBP")
-        to_currency: Quote currency code (e.g., "EUR", "USD", "JPY")
-        period: Time period for historical data
-        interval: Data interval
-    
-    Returns:
-        Dictionary containing historical forex data
-    """
-    return await get_forex_history(from_currency, to_currency, period, interval)
-
-
-@mcp.tool()
-async def get_currency_list_tool() -> Dict[str, Any]:
-    """
-    Get list of supported currencies with their information.
-    
-    Returns:
-        Dictionary containing currency list and information
-    """
-    return await get_currency_list()
-
-
-@mcp.tool()
-async def get_currency_converter_tool(
-    amount: float,
-    from_currency: str,
-    to_currency: str,
-    source: Literal["yahoo", "alpha_vantage"] = "yahoo"
-) -> Dict[str, Any]:
-    """
-    Convert amount from one currency to another.
-    
-    Args:
-        amount: Amount to convert
-        from_currency: Source currency code
-        to_currency: Target currency code
-        source: Data source ("yahoo" or "alpha_vantage")
-    
-    Returns:
-        Dictionary containing conversion result
-    """
-    return await get_currency_converter(amount, from_currency, to_currency, source)
-
-# ==================== CRYPTOCURRENCY TOOLS ====================
-
-@mcp.tool()
-async def get_crypto_price_tool(
+async def analyze_stock_tool(
     symbol: str,
-    market: str = "USD",
-    source: Literal["yahoo", "alpha_vantage"] = "yahoo"
-) -> Dict[str, Any]:
+    period: str = "1y",
+    interval: str = "1d"
+) -> ApiResponse:
     """
-    Get current cryptocurrency price.
+    Provide a structured research-style analysis of a stock combining overview, 
+    fundamentals, technicals, valuation, and summary.
     
     Args:
-        symbol: Cryptocurrency symbol (e.g., "BTC", "ETH", "ADA")
-        market: Quote currency (e.g., "USD", "EUR", "GBP")
-        source: Data source ("yahoo" or "alpha_vantage")
+        symbol: Stock symbol (e.g., "RELIANCE", "RELIANCE.NS", "PNB.BO")
+               If no exchange suffix is provided, will automatically try NSE (.NS) first, then BSE (.BO)
+        period: Time period for historical data (default: "1y")
+        interval: Data interval (default: "1d")
     
     Returns:
-        Dictionary containing current price and basic information
+        Dictionary containing comprehensive stock analysis including:
+        - Company profile (name, sector, industry, market cap, description)
+        - Fundamentals (valuation ratios, profitability, growth, financial health)
+        - Technicals (price, moving averages, RSI, MACD, trend signals)
+        - Summary (strengths, risks, overall view)
+        
+    Example:
+        >>> analyze_stock_tool("RELIANCE")
+        Returns comprehensive analysis of Reliance Industries with all metrics
     """
-    return await get_crypto_price(symbol, market, source)
-
-
-@mcp.tool()
-async def get_crypto_history_tool(
-    symbol: str,
-    market: str = "USD",
-    period: Literal["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"] = "1mo",
-    interval: Literal["1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo"] = "1d"
-) -> Dict[str, Any]:
-    """
-    Get historical cryptocurrency data.
-    
-    Args:
-        symbol: Cryptocurrency symbol (e.g., "BTC", "ETH", "ADA")
-        market: Quote currency (e.g., "USD", "EUR", "GBP")
-        period: Time period for historical data
-        interval: Data interval
-    
-    Returns:
-        Dictionary containing historical crypto data
-    """
-    return await get_crypto_history(symbol, market, period, interval)
-
-
-@mcp.tool()
-async def get_crypto_list_tool() -> Dict[str, Any]:
-    """
-    Get list of major cryptocurrencies with their information.
-    
-    Returns:
-        Dictionary containing cryptocurrency list and information
-    """
-    return await get_crypto_list()
-
-
-@mcp.tool()
-async def get_crypto_market_data_tool(symbol: str, market: str = "USD") -> Dict[str, Any]:
-    """
-    Get comprehensive cryptocurrency market data.
-    
-    Args:
-        symbol: Cryptocurrency symbol (e.g., "BTC", "ETH", "ADA")
-        market: Quote currency (e.g., "USD", "EUR", "GBP")
-    
-    Returns:
-        Dictionary containing comprehensive market data
-    """
-    return await get_crypto_market_data(symbol, market)
-
-
-@mcp.tool()
-async def search_cryptocurrencies_tool(query: str, limit: int = 10) -> Dict[str, Any]:
-    """
-    Search for cryptocurrencies by name or symbol.
-    
-    Args:
-        query: Search query (cryptocurrency name or symbol)
-        limit: Maximum number of results
-    
-    Returns:
-        Dictionary containing search results
-    """
-    return await search_cryptocurrencies(query, limit)
+    return await analyze_stock(symbol, period, interval)
 
 # ==================== MACROECONOMIC TOOLS ====================
 
@@ -319,7 +186,7 @@ async def get_economic_indicator_tool(
     series_id: str,
     observation_start: Optional[str] = None,
     observation_end: Optional[str] = None
-) -> Dict[str, Any]:
+) -> ApiResponse:
     """
     Get economic indicator data from FRED.
     
@@ -335,7 +202,7 @@ async def get_economic_indicator_tool(
 
 
 @mcp.tool()
-async def get_fed_rates_tool() -> Dict[str, Any]:
+async def get_fed_rates_tool() -> ApiResponse:
     """
     Get Federal Reserve interest rates.
     
@@ -346,7 +213,7 @@ async def get_fed_rates_tool() -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def get_inflation_data_tool() -> Dict[str, Any]:
+async def get_inflation_data_tool() -> ApiResponse:
     """
     Get inflation data including CPI and PCE.
     
@@ -357,7 +224,7 @@ async def get_inflation_data_tool() -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def get_gdp_data_tool() -> Dict[str, Any]:
+async def get_gdp_data_tool() -> ApiResponse:
     """
     Get GDP data including real and nominal GDP.
     
@@ -368,7 +235,7 @@ async def get_gdp_data_tool() -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def get_unemployment_data_tool() -> Dict[str, Any]:
+async def get_unemployment_data_tool() -> ApiResponse:
     """
     Get unemployment data including unemployment rate and labor force participation.
     
@@ -379,7 +246,7 @@ async def get_unemployment_data_tool() -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def get_popular_indicators_tool() -> Dict[str, Any]:
+async def get_popular_indicators_tool() -> ApiResponse:
     """
     Get list of popular economic indicators with their FRED series IDs.
     
@@ -401,18 +268,6 @@ def status_resource() -> Dict[str, Any]:
     }
 
 
-@mcp.resource("finance://currencies", mime_type="application/json")
-async def currencies_resource() -> Dict[str, Any]:
-    """Get list of supported currencies."""
-    return await get_currency_list()
-
-
-@mcp.resource("finance://cryptocurrencies", mime_type="application/json")
-async def cryptocurrencies_resource() -> Dict[str, Any]:
-    """Get list of supported cryptocurrencies."""
-    return await get_crypto_list()
-
-
 @mcp.resource("finance://indicators", mime_type="application/json")
 async def indicators_resource() -> Dict[str, Any]:
     """Get list of popular economic indicators."""
@@ -423,18 +278,6 @@ async def indicators_resource() -> Dict[str, Any]:
 async def stock_resource(symbol: str) -> Dict[str, Any]:
     """Get stock quote for a given symbol."""
     return await get_stock_quote(symbol)
-
-
-@mcp.resource("finance://forex/{from_currency}/{to_currency}", mime_type="application/json")
-async def forex_resource(from_currency: str, to_currency: str) -> Dict[str, Any]:
-    """Get forex rate for a given currency pair."""
-    return await get_forex_rate(from_currency, to_currency)
-
-
-@mcp.resource("finance://crypto/{symbol}", mime_type="application/json")
-async def crypto_resource(symbol: str, market: str = "USD") -> Dict[str, Any]:
-    """Get cryptocurrency price for a given symbol."""
-    return await get_crypto_price(symbol, market)
 
 
 @mcp.resource("finance://macro/fed-rates", mime_type="application/json")
@@ -460,18 +303,6 @@ async def gdp_resource() -> Dict[str, Any]:
 def analyze_stock_market(symbol: str) -> str:
     """Generate a prompt for analyzing a stock's market performance."""
     return f"Analyze the current market performance of {symbol}. Include price trends, volume analysis, and key financial metrics."
-
-
-@mcp.prompt
-def compare_currencies(from_currency: str, to_currency: str) -> str:
-    """Generate a prompt for comparing currency performance."""
-    return f"Compare the performance of {from_currency} against {to_currency}. Include exchange rate trends and economic factors affecting the currencies."
-
-
-@mcp.prompt
-def crypto_market_analysis(symbol: str) -> str:
-    """Generate a prompt for analyzing cryptocurrency market data."""
-    return f"Analyze the current market data for {symbol}. Include price trends, market cap, volume, and key metrics."
 
 
 @mcp.prompt
@@ -503,9 +334,7 @@ if __name__ == "__main__":
     
     logger.info(f"Starting {settings.mcp_server_name} server...")
     logger.info("Available tools:")
-    logger.info("- Stock Market: get_stock_price, get_stock_quote, get_stock_history, get_stock_fundamentals, search_stocks")
-    logger.info("- Forex: get_forex_rate, get_forex_history, get_currency_list, get_currency_converter")
-    logger.info("- Cryptocurrency: get_crypto_price, get_crypto_history, get_crypto_list, get_crypto_market_data, search_cryptocurrencies")
+    logger.info("- Indian Stock Market: get_stock_price, get_stock_quote, get_stock_history, get_stock_fundamentals, search_stocks, analyze_stock_tool")
     logger.info("- Macroeconomic: get_economic_indicator, get_fed_rates, get_inflation_data, get_gdp_data, get_unemployment_data, get_popular_indicators")
     
     uvicorn.run(

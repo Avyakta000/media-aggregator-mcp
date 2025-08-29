@@ -1,27 +1,18 @@
 # FinanceMCP
 
-A production-ready MCP (Model Context Protocol) server for comprehensive financial data using FastMCP. Provides real-time access to stock prices, forex rates, cryptocurrency data, and macroeconomic indicators.
+A production-ready MCP (Model Context Protocol) server for comprehensive financial data using FastMCP. Provides real-time access to Indian stock market data and macroeconomic indicators.
 
 ## Features
 
-### 📈 Stock Market Data
-- **Real-time stock prices** from Yahoo Finance and Alpha Vantage
+### 📈 Indian Stock Market Data
+- **Real-time Indian stock prices** from Yahoo Finance (NSE & BSE)
 - **Comprehensive stock quotes** with detailed financial metrics
 - **Historical price data** with customizable timeframes
 - **Fundamental analysis** including P/E ratios, market cap, dividends
-- **Stock search** by company name or symbol
-
-### 💱 Foreign Exchange (Forex)
-- **Live exchange rates** between major currencies
-- **Historical forex data** with trend analysis
-- **Currency conversion** tools
-- **Supported currencies** including USD, EUR, GBP, JPY, and more
-
-### 🪙 Cryptocurrency
-- **Real-time crypto prices** for major cryptocurrencies
-- **Historical crypto data** with market analysis
-- **Market cap and volume** information
-- **Cryptocurrency search** and discovery
+- **Stock search** by Indian company name or symbol (prioritizes Indian stocks)
+- **Smart symbol handling**: Pass just stock names (e.g., "RELIANCE") and automatically try NSE (.NS) first, then BSE (.BO)
+- **NSE and BSE support** with proper exchange suffixes (.NS, .BO)
+- **Comprehensive stock analysis** with technical indicators and research-style reports
 
 ### 📊 Macroeconomic Indicators
 - **Federal Reserve rates** and monetary policy data
@@ -54,7 +45,7 @@ nano .env
 ```
 
 **Required API Keys:**
-- **Alpha Vantage**: Free API key for stock and forex data
+- **Alpha Vantage**: Free API key for stock data
 - **FRED**: Free API key for macroeconomic data
 
 ### 3. Run the Server
@@ -68,34 +59,16 @@ The server will be available at `http://localhost:8000`
 
 ## API Tools
 
-### Stock Market Tools
+### Indian Stock Market Tools
 
 | Tool | Description | Example |
 |------|-------------|---------|
-| `get_stock_price_tool` | Get current stock price | `get_stock_price_tool("AAPL")` |
-| `get_stock_quote_tool` | Get comprehensive stock quote | `get_stock_quote_tool("MSFT")` |
-| `get_stock_history_tool` | Get historical price data | `get_stock_history_tool("GOOGL", period="1mo")` |
-| `get_stock_fundamentals_tool` | Get fundamental data | `get_stock_fundamentals_tool("TSLA")` |
-| `search_stocks_tool` | Search for stocks | `search_stocks_tool("Apple", limit=5)` |
-
-### Forex Tools
-
-| Tool | Description | Example |
-|------|-------------|---------|
-| `get_forex_rate_tool` | Get exchange rate | `get_forex_rate_tool("USD", "EUR")` |
-| `get_forex_history_tool` | Get historical forex data | `get_forex_history_tool("EUR", "USD", period="1mo")` |
-| `get_currency_list_tool` | Get supported currencies | `get_currency_list_tool()` |
-| `get_currency_converter_tool` | Convert currency | `get_currency_converter_tool(100, "USD", "EUR")` |
-
-### Cryptocurrency Tools
-
-| Tool | Description | Example |
-|------|-------------|---------|
-| `get_crypto_price_tool` | Get crypto price | `get_crypto_price_tool("BTC", "USD")` |
-| `get_crypto_history_tool` | Get historical crypto data | `get_crypto_history_tool("ETH", "USD", period="1mo")` |
-| `get_crypto_list_tool` | Get supported cryptocurrencies | `get_crypto_list_tool()` |
-| `get_crypto_market_data_tool` | Get comprehensive market data | `get_crypto_market_data_tool("BTC", "USD")` |
-| `search_cryptocurrencies_tool` | Search for cryptocurrencies | `search_cryptocurrencies_tool("Bitcoin", limit=5)` |
+| `get_stock_price_tool` | Get current Indian stock price | `get_stock_price_tool("RELIANCE")` or `get_stock_price_tool("RELIANCE.NS")` |
+| `get_stock_quote_tool` | Get comprehensive stock quote | `get_stock_quote_tool("TCS")` or `get_stock_quote_tool("TCS.NS")` |
+| `get_stock_history_tool` | Get historical price data | `get_stock_history_tool("HDFCBANK", period="1mo")` or `get_stock_history_tool("HDFCBANK.NS", period="1mo")` |
+| `get_stock_fundamentals_tool` | Get fundamental data | `get_stock_fundamentals_tool("INFY")` or `get_stock_fundamentals_tool("INFY.NS")` |
+| `search_stocks_tool` | Search for Indian stocks | `search_stocks_tool("Reliance", limit=5)` |
+| `analyze_stock_tool` | Get comprehensive stock analysis | `analyze_stock_tool("RELIANCE")` |
 
 ### Macroeconomic Tools
 
@@ -113,12 +86,8 @@ The server will be available at `http://localhost:8000`
 The server provides RESTful resources for easy data access:
 
 - `finance://status` - Server status
-- `finance://currencies` - Supported currencies
-- `finance://cryptocurrencies` - Supported cryptocurrencies
 - `finance://indicators` - Popular economic indicators
 - `finance://stock/{symbol}` - Stock quote
-- `finance://forex/{from}/{to}` - Forex rate
-- `finance://crypto/{symbol}` - Crypto price
 - `finance://macro/fed-rates` - Federal Reserve rates
 - `finance://macro/inflation` - Inflation data
 - `finance://macro/gdp` - GDP data
@@ -128,17 +97,17 @@ The server provides RESTful resources for easy data access:
 ### AI Agent Integration
 
 ```python
-# Example: Get Apple stock price
-result = await get_stock_price_tool("AAPL")
-print(f"Apple stock price: ${result['price']}")
+# Example: Get Reliance stock price (with automatic suffix handling)
+result = await get_stock_price_tool("RELIANCE")  # Will try RELIANCE.NS first, then RELIANCE.BO
+print(f"Reliance stock price: ₹{result['price']}")
 
-# Example: Convert USD to EUR
-result = await get_currency_converter_tool(100, "USD", "EUR")
-print(f"100 USD = {result['converted_amount']} EUR")
+# Example: Get TCS stock with explicit NSE suffix
+result = await get_stock_price_tool("TCS.NS")
+print(f"TCS stock price: ₹{result['price']}")
 
-# Example: Get Bitcoin market data
-result = await get_crypto_market_data_tool("BTC", "USD")
-print(f"Bitcoin market cap: ${result['market_data']['market_cap']}")
+# Example: Get comprehensive stock analysis
+result = await analyze_stock_tool("RELIANCE")
+print(f"Analysis: {result['summary']['overall_view']}")
 
 # Example: Get Federal Reserve rates
 result = await get_fed_rates_tool()
@@ -149,15 +118,11 @@ print(f"Federal Funds Rate: {result['rates']['federal_funds_rate']['current']}%"
 
 ```python
 # Get comprehensive market analysis
-stock_data = await get_stock_quote_tool("AAPL")
-forex_data = await get_forex_rate_tool("USD", "EUR")
-crypto_data = await get_crypto_price_tool("BTC", "USD")
+stock_data = await get_stock_quote_tool("RELIANCE")  # Will try RELIANCE.NS first, then RELIANCE.BO
 macro_data = await get_inflation_data_tool()
 
 # Analyze market conditions
-print(f"Apple: ${stock_data['current_price']}")
-print(f"USD/EUR: {forex_data['rate']}")
-print(f"Bitcoin: ${crypto_data['price']}")
+print(f"Reliance: ₹{stock_data['current_price']}")
 print(f"Inflation (CPI): {macro_data['inflation_indicators']['cpi_all_urban']['year_over_year_change']}%")
 ```
 
@@ -172,8 +137,8 @@ print(f"Inflation (CPI): {macro_data['inflation_indicators']['cpi_all_urban']['y
 | `FRED_API_KEY` | FRED API key | Required |
 | `AUTHKIT_DOMAIN` | AuthKit domain (optional) | None |
 | `BASE_URL` | Base URL (optional) | None |
-| `DEFAULT_CURRENCY` | Default currency | `USD` |
-| `DEFAULT_MARKET` | Default market | `US` |
+| `DEFAULT_CURRENCY` | Default currency | `INR` |
+| `DEFAULT_MARKET` | Default market | `IN` |
 | `DEFAULT_TIMEFRAME` | Default timeframe | `1d` |
 | `REQUESTS_PER_MINUTE` | Rate limiting | `60` |
 | `CACHE_TTL_SECONDS` | Cache TTL | `300` |
@@ -194,8 +159,6 @@ FinanceMCP/
 ├── tools/                 # Financial tools modules
 │   ├── __init__.py
 │   ├── stock_tools.py     # Stock market tools
-│   ├── forex_tools.py     # Forex tools
-│   ├── crypto_tools.py    # Cryptocurrency tools
 │   └── macro_tools.py     # Macroeconomic tools
 ├── env.example           # Environment template
 └── README.md            # This file
@@ -203,8 +166,8 @@ FinanceMCP/
 
 ## Data Sources
 
-- **Yahoo Finance**: Primary source for stock and crypto data
-- **Alpha Vantage**: Alternative source for stock and forex data
+- **Yahoo Finance**: Primary source for Indian stock data (NSE & BSE)
+- **Alpha Vantage**: Alternative source for stock data
 - **FRED**: Federal Reserve Economic Data for macroeconomic indicators
 
 ## Error Handling
