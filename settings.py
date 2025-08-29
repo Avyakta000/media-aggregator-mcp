@@ -34,6 +34,20 @@ class Settings(BaseSettings):
     auth_issuer: Optional[str] = None
     resource: Optional[str] = None
 
+    # ScaleKit Configuration
+    SCALEKIT_ENVIRONMENT_URL: Optional[str] = None
+    SCALEKIT_CLIENT_ID: Optional[str] = None
+    SCALEKIT_CLIENT_SECRET: Optional[str] = None
+    SCALEKIT_RESOURCE_IDENTIFIER: Optional[str] = None
+    SCALEKIT_RESOURCE_METADATA_URL: Optional[str] = None
+    SCALEKIT_AUTHORIZATION_SERVERS: Optional[str] = None
+    SCALEKIT_AUDIENCE_NAME: Optional[str] = None
+    SCALEKIT_RESOURCE_NAME: Optional[str] = None
+    SCALEKIT_RESOURCE_DOCS_URL: Optional[str] = None
+
+    # Server Port
+    PORT: int = 3000
+
     class Config:
         env_file = ".env"
         case_sensitive = False

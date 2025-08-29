@@ -40,7 +40,7 @@ pip install -r requirements.txt
 # Copy environment template
 cp env.example .env
 
-# Edit .env with your API keys
+# Edit .env with your API keys and ScaleKit settings
 nano .env
 ```
 
@@ -48,14 +48,24 @@ nano .env
 - **Alpha Vantage**: Free API key for stock data
 - **FRED**: Free API key for macroeconomic data
 
+**Required ScaleKit Settings:**
+- **ScaleKit Environment URL**: Your ScaleKit environment URL
+- **ScaleKit Client ID**: Your ScaleKit client ID
+- **ScaleKit Client Secret**: Your ScaleKit client secret
+- **ScaleKit Audience Name**: Your ScaleKit audience name
+
+For detailed ScaleKit setup instructions, see [SCALEKIT_SETUP.md](SCALEKIT_SETUP.md).
+
 ### 3. Run the Server
 
 ```bash
-# Start the server
+# Start the server with ScaleKit authentication
 python server.py
 ```
 
-The server will be available at `http://localhost:8000`
+The server will be available at `http://localhost:3000` (or the port specified in your .env file)
+
+**Note**: The server now requires ScaleKit authentication. All requests (except well-known endpoints) must include a valid Bearer token in the Authorization header.
 
 ## API Tools
 
@@ -80,6 +90,29 @@ The server will be available at `http://localhost:8000`
 | `get_gdp_data_tool` | Get GDP data | `get_gdp_data_tool()` |
 | `get_unemployment_data_tool` | Get unemployment data | `get_unemployment_data_tool()` |
 | `get_popular_indicators_tool` | Get popular indicators | `get_popular_indicators_tool()` |
+
+## Authentication
+
+This server uses ScaleKit for OAuth 2.0 authentication. All requests (except well-known endpoints) require a valid Bearer token.
+
+### Public Endpoints
+- `GET /.well-known/oauth-protected-resource/mcp` - OAuth 2.0 discovery endpoint (no authentication required)
+
+### Protected Endpoints
+All MCP endpoints require authentication:
+- Include `Authorization: Bearer <your_token>` header in requests
+- Invalid or missing tokens return 401 Unauthorized
+
+### Testing Authentication
+```bash
+# Test well-known endpoint (no auth required)
+curl http://localhost:3000/.well-known/oauth-protected-resource/mcp
+
+# Test protected endpoint (auth required)
+curl -H "Authorization: Bearer YOUR_TOKEN" http://localhost:3000/mcp
+```
+
+For detailed authentication setup, see [SCALEKIT_SETUP.md](SCALEKIT_SETUP.md).
 
 ## Resources
 

@@ -13,4 +13,5 @@ pandas
 numpy
 aiohttp
 asyncio
-mcpauth==0.2.0b1
+scalekit-sdk-python
+fastapi

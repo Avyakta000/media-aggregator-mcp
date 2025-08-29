@@ -11,8 +11,12 @@ from datetime import datetime
 
 from fastmcp import FastMCP
 from fastmcp.server.auth.providers.workos import AuthKitProvider
-from starlette.applications import Starlette
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.routing import Mount
+
+# Import authentication middleware
+from auth import AuthMiddleware
 
 # Import all financial tools
 from tools.stock_tools import (
@@ -43,12 +47,6 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
 logger = logging.getLogger("FinanceMCP")
-
-# Initialize MCPAuth (keeping existing integration)
-# auth = AuthKitProvider(
-#     authkit_domain=settings.authkit_domain,
-#     base_url=settings.base_url
-# )
 
 # Initialize FastMCP server
 mcp = FastMCP(settings.mcp_server_name)
@@ -318,29 +316,59 @@ def investment_recommendation(asset_type: str, symbol: str) -> str:
 
 # ==================== SERVER SETUP ====================
 
-# Create HTTP app
+# Create HTTP app from MCP server
 mcp_app = mcp.http_app(path='/mcp')
 
-# Create Starlette app with MCP integration
-app = Starlette(
-    routes=[
-        Mount("/", app=mcp_app),
-    ],
-    lifespan=mcp_app.lifespan,
+# Create FastAPI app with MCP lifespan
+app = FastAPI(lifespan=mcp_app.lifespan)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your actual origins
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
 )
+
+# Add authentication middleware
+app.add_middleware(AuthMiddleware)
+
+# MCP well-known endpoint
+@app.get("/.well-known/oauth-protected-resource/mcp")
+async def oauth_protected_resource_metadata():
+    """
+    OAuth 2.0 Protected Resource Metadata endpoint for MCP client discovery.
+    Required by the MCP specification for authorization server discovery.
+    """
+    logger.info('OAuth protected resource metadata endpoint called')
+    return {
+        "authorization_servers": [settings.SCALEKIT_AUTHORIZATION_SERVERS],
+        "bearer_methods_supported": ["header"],
+        "resource": settings.SCALEKIT_RESOURCE_NAME,
+        "resource_documentation": settings.SCALEKIT_RESOURCE_DOCS_URL,
+        "scopes_supported": [
+          "mcp:tools:analyze:read"
+        ],
+    }
+
+# Mount the MCP server
+app.mount("/", mcp_app)
 
 if __name__ == "__main__":
     import uvicorn
     
-    logger.info(f"Starting {settings.mcp_server_name} server...")
+    logger.info(f"Starting {settings.mcp_server_name} server with ScaleKit authentication...")
     logger.info("Available tools:")
     logger.info("- Indian Stock Market: get_stock_price, get_stock_quote, get_stock_history, get_stock_fundamentals, search_stocks, analyze_stock_tool")
     logger.info("- Macroeconomic: get_economic_indicator, get_fed_rates, get_inflation_data, get_gdp_data, get_unemployment_data, get_popular_indicators")
+    logger.info(f"Server will be available at http://localhost:{settings.PORT}")
+    logger.info("Authentication required for all endpoints except /.well-known/oauth-protected-resource/mcp")
     
     uvicorn.run(
         "server:app",
         host="0.0.0.0",
-        port=8000,
+        port=settings.PORT,
         reload=True,
         log_level="info"
     )
